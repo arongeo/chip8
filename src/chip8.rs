@@ -1,20 +1,28 @@
+#[path = "config.rs"]
 mod config;
+#[path = "memory.rs"]
+mod memory;
+#[path = "stack.rs"]
+mod stack;
+#[path = "registers.rs"]
+mod registers;
+#[path = "keyboard.rs"]
+mod keyboard;
 
 pub struct Chip8 {
-    memory: [u8; config::CHIP8_MEMORY_SIZE],
-    registers: [u8; config::CHIP8_REGISTERS_NUM],
-    dt: u8,
-    st: u8,
-    pc: u16,
-    sp: u8,
-    stack: [u16; config::CHIP8_STACK_SIZE],
-    keyboard: [bool; config::CHIP8_KEYBOARD_SIZE],
+    pub memory: memory::Memory,
+    pub stack: stack::Stack,
+    pub registers: registers::Registers,
+    pub keyboard: keyboard::Keyboard,
 }
 
 impl Chip8 {
     pub fn new() -> Self {
-        Chip8 {
-            
+        Self {
+            memory: memory::Memory::new(),
+            stack: stack::Stack::new(),
+            registers: registers::Registers::new(),
+            keyboard: keyboard::Keyboard::new(),
         }
     }
 }
