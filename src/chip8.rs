@@ -8,12 +8,15 @@ mod stack;
 mod registers;
 #[path = "keyboard.rs"]
 mod keyboard;
+#[path = "display.rs"]
+mod display;
 
 pub struct Chip8 {
     pub memory: memory::Memory,
     pub stack: stack::Stack,
     pub registers: registers::Registers,
     pub keyboard: keyboard::Keyboard,
+    pub display: display::Display,
 }
 
 impl Chip8 {
@@ -23,6 +26,7 @@ impl Chip8 {
             stack: stack::Stack::new(),
             registers: registers::Registers::new(),
             keyboard: keyboard::Keyboard::new(),
+            display: display::Display::new(),
         }
     }
 
