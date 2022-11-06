@@ -24,7 +24,7 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
     let v_subsys = sdl_context.video().unwrap();
 
-    let mut window = v_subsys.window("Chip-8", (config::CHIP8_DISPLAY_WIDTH * 10).try_into().unwrap(), (config::CHIP8_DISPLAY_HEIGHT * 10).try_into().unwrap())
+    let mut window = v_subsys.window("Chip-8", (config::CHIP8_DISPLAY_WIDTH * 10) as u32, (config::CHIP8_DISPLAY_HEIGHT * 10) as u32)
         .position_centered()
         .build()
         .unwrap();
