@@ -25,4 +25,15 @@ impl Chip8 {
             keyboard: keyboard::Keyboard::new(),
         }
     }
+
+    pub fn stack_push(&mut self, value: u16) {
+        self.registers.sp = self.registers.sp + 1;
+        self.stack.stack[self.registers.sp] = value;
+    }
+
+    pub fn stack_pop(&mut self) -> u16 {
+        let result = self.stack.stack[self.registers.sp];
+        self.registers.sp = self.registers.sp - 1;
+        result
+    }
 }

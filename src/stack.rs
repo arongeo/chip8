@@ -1,8 +1,10 @@
 #[path = "config.rs"]
 mod config;
+#[path = "registers.rs"]
+mod registers;
 
 pub struct Stack {
-    stack: [u16; config::CHIP8_STACK_SIZE],
+    pub stack: [u16; config::CHIP8_STACK_SIZE],
 }
 
 impl Stack {

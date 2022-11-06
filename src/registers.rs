@@ -2,11 +2,11 @@
 mod config;
 
 pub struct Registers {
-    v: [u8; config::CHIP8_REGISTERS_NUM],
-    dt: u8,
-    st: u8,
-    pc: u16,
-    sp: u8,
+    pub v: [u8; config::CHIP8_REGISTERS_NUM],
+    pub dt: u8,
+    pub st: u8,
+    pub pc: u16,
+    pub sp: usize,
 }
 
 impl Registers {
