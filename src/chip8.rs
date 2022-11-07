@@ -7,17 +7,17 @@
 //
 
 #[path = "config.rs"]
-mod config;
+pub mod config;
 #[path = "memory.rs"]
-mod memory;
+pub mod memory;
 #[path = "stack.rs"]
-mod stack;
+pub mod stack;
 #[path = "registers.rs"]
-mod registers;
+pub mod registers;
 #[path = "keyboard.rs"]
-mod keyboard;
+pub mod keyboard;
 #[path = "display.rs"]
-mod display;
+pub mod display;
 
 pub struct Chip8 {
     pub memory: memory::Memory,

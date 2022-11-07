@@ -18,6 +18,8 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use std::time::Duration;
 
+use chip8::keyboard::VKeys;
+
 fn main() {
     let mut chip_8: chip8::Chip8 = chip8::Chip8::new();
 
@@ -36,17 +38,18 @@ fn main() {
     chip_8.display.set_pixel(0, 1, true);
     'running: loop {
         chip_8.display.render(&mut canvas);
+        chip_8.keyboard.check_keys(&mut event_pump);
+        if chip_8.keyboard.get_key_status(VKeys::Key1) == true {
+            chip_8.display.set_pixel(0, 2, true);
+        }
+        if chip_8.keyboard.get_key_status(VKeys::Key2) == true {
+            chip_8.display.set_pixel(0, 2, false);
+        }
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} |
                 Event::KeyDown {keycode: Some(Keycode::Escape), ..} => {
                     break 'running;
-                },
-                Event::KeyDown {keycode: Some(Keycode::A), ..} => {
-                    chip_8.display.set_pixel(0, 2, true);
-                },
-                Event::KeyDown {keycode: Some(Keycode::S), ..} => {
-                    chip_8.display.set_pixel(0, 2, false);
                 },
                 _ => {}
             }
