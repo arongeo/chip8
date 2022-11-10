@@ -13,3 +13,4 @@ pub const CHIP8_REGISTERS_NUM: usize = 16;
 pub const CHIP8_STACK_SIZE: usize = 16;
 pub const CHIP8_KEYBOARD_SIZE: usize = 16;
 pub const CHIP8_CHARSET_LEN: usize = 80;
+pub const CHIP8_INSTRUCTIONS_SIZE: usize = 0xE00;
