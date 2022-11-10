@@ -27,6 +27,7 @@ pub struct Chip8 {
     pub registers: registers::Registers,
     pub keyboard: keyboard::Keyboard,
     pub display: display::Display,
+    pub romcartridge: romhandler::RomCartridge,
 }
 
 impl Chip8 {
@@ -37,6 +38,7 @@ impl Chip8 {
             registers: registers::Registers::new(),
             keyboard: keyboard::Keyboard::new(),
             display: display::Display::new(),
+            romcartridge: romhandler::RomCartridge::new(),
         }
     }
 

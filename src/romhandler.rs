@@ -8,7 +8,7 @@ fn printhelp() {
     println!("Chip-8 Interpreter written in Rust");
     println!("\nMade by arongeo");
     println!("https://arongeo.com");
-    println!("Usage: ");
+    println!("\nUsage: ");
     println!("chip8 <path/to/rom>");
 
 }
