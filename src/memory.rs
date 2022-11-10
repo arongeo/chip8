@@ -24,4 +24,8 @@ impl Memory {
             ram: ram,
         }
     }
+
+    pub fn load_instructions(&mut self, instructions: [u8; 0xE00]) {
+        self.ram[0x200..0xFFF].clone_from_slice(&instructions);
+    }
 }
