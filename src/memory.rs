@@ -10,6 +10,8 @@
 mod config;
 #[path = "charset.rs"]
 mod charset;
+#[path = "romhandler.rs"]
+mod romhandler;
 
 pub struct Memory {
     pub ram: [u8; config::CHIP8_MEMORY_SIZE],
@@ -25,7 +27,7 @@ impl Memory {
         }
     }
 
-    pub fn load_instructions(&mut self, instructions: [u8; 0xE00]) {
-        self.ram[0x200..0xFFF].clone_from_slice(&instructions);
+    pub fn load_instructions(&mut self, romcart: romhandler::RomCartridge) {
+        self.ram[0x200..0xFFF].clone_from_slice(&romcart.rom);
     }
 }

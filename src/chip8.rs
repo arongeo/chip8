@@ -18,6 +18,8 @@ pub mod registers;
 pub mod keyboard;
 #[path = "display.rs"]
 pub mod display;
+#[path = "romhandler.rs"]
+pub mod romhandler;
 
 pub struct Chip8 {
     pub memory: memory::Memory,
