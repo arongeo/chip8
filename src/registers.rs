@@ -23,7 +23,7 @@ impl Registers {
             v: [0; config::CHIP8_REGISTERS_NUM],
             dt: 0,
             st: 0,
-            pc: 0,
+            pc: 0x200,
             sp: 0,
         }
     }
