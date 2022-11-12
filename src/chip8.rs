@@ -52,4 +52,8 @@ impl Chip8 {
         self.registers.sp = self.registers.sp - 1;
         result
     }
+
+    pub fn load_instructions(&mut self) {
+        self.memory.ram[0x200..0x1000].copy_from_slice(&self.romcartridge.rom);
+    }
 }

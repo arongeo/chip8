@@ -15,13 +15,13 @@ use sdl2::pixels::Color;
 use sdl2::video::Window;
 
 pub struct Display {
-    pub display: [[bool; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
+    pub pixels: [[bool; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
 }
 
 impl Display {
     pub fn new() -> Self {
         Self {
-            display: [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
+            pixels: [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
         }
     }
 
@@ -36,12 +36,12 @@ impl Display {
 
     pub fn set_pixel(&mut self, x: usize, y: usize, val: bool) {
         Self::check_pixel_in_bounds(x, y);
-        self.display[x][y] = val;
+        self.pixels[x][y] = val;
     }
 
     pub fn get_pixel(&mut self, x: usize, y: usize) -> bool {
         Self::check_pixel_in_bounds(x, y);
-        self.display[x][y]
+        self.pixels[x][y]
     }
     
     pub fn render(&mut self, canvas: &mut Canvas<Window>) {
@@ -57,5 +57,9 @@ impl Display {
                 }
             }
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.pixels = [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH];
     }
 }
