@@ -61,7 +61,10 @@ impl Cpu {
 
     pub fn execute_instruction(&mut self, instruction: &mut Instruction) {
         match instruction.nibbles {
-            [0x0, 0x0, 0xE, 0x0] => self.cls(),
+            [0x0, 0x0, 0xE, 0x0]    => self.cls(),
+            [0x0, 0x0, 0xE, 0xE]    => self.ret(),
+            [0x1, _, _, _]          => self.jump(instruction.nnn),
+            [0x2, _, _, _]          => self.call(instruction.nnn),
             _ => self.incr_pc(),
         }
     }
@@ -73,4 +76,21 @@ impl Cpu {
         self.chip8.display.clear();
         self.incr_pc();
     }
+
+    fn ret(&mut self) {
+        self.chip8.registers.pc = self.chip8.stack.stack[self.chip8.registers.sp];
+        self.chip8.registers.sp = self.chip8.registers.sp - 1;
+        self.incr_pc();
+    }
+
+    fn jump(&mut self, nnn: u16) {
+        self.chip8.registers.pc = nnn;
+        self.incr_pc();
+    }
+
+    fn call(&mut self, nnn: u16) {
+        self.chip8.registers.sp = self.chip8.registers.sp + 1;
+        self.chip8.stack.stack[self.chip8.registers.sp] = self.chip8.registers.pc;
+        self.chip8.registers.pc = nnn;
+    } 
 }
