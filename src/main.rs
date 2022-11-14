@@ -35,7 +35,6 @@ fn main() {
 
     let mut canvas = window.into_canvas().build().unwrap();
     chip8cpu.chip8.display.set_pixel(0, 0, true);
-    chip8cpu.load();
     let mut event_pump = sdl_context.event_pump().unwrap();
     'running: loop {
         chip8cpu.chip8.display.render(&mut canvas);
