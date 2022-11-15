@@ -46,8 +46,12 @@ impl Cpu {
         }
     }
 
-    pub fn incr_pc(&mut self) {
+    pub fn next_inst(&mut self) {
         self.chip8.registers.pc = self.chip8.registers.pc + 2;
+    }
+
+    pub fn skip_next_inst(&mut self) {
+        self.chip8.registers.pc = self.chip8.registers.pc + 4;
     }
 
     pub fn load_instructions(&mut self) {
@@ -65,7 +69,11 @@ impl Cpu {
             [0x0, 0x0, 0xE, 0xE]    => self.ret(),
             [0x1, _, _, _]          => self.jump(instruction.nnn),
             [0x2, _, _, _]          => self.call(instruction.nnn),
-            _ => self.incr_pc(),
+            [0x3, _, _, _]          => self.se_vx_byte(instruction.x, instruction.kk),
+            [0x4, _, _, _]          => self.sne_vx_byte(instruction.x, instruction.kk),
+            [0x5, _, _, 0x0]        => self.se_vx_vy(instruction.x, instruction.y),
+            [0x6, _, _, _]          => self.ld_vx_byte(instruction.x, instruction.kk),
+            _ => self.next_inst(),
         }
     }
     
@@ -74,18 +82,17 @@ impl Cpu {
 
     fn cls(&mut self) {
         self.chip8.display.clear();
-        self.incr_pc();
+        self.next_inst();
     }
 
     fn ret(&mut self) {
         self.chip8.registers.pc = self.chip8.stack.stack[self.chip8.registers.sp];
         self.chip8.registers.sp = self.chip8.registers.sp - 1;
-        self.incr_pc();
     }
 
     fn jump(&mut self, nnn: u16) {
         self.chip8.registers.pc = nnn;
-        self.incr_pc();
+        self.next_inst();
     }
 
     fn call(&mut self, nnn: u16) {
@@ -93,4 +100,33 @@ impl Cpu {
         self.chip8.stack.stack[self.chip8.registers.sp] = self.chip8.registers.pc;
         self.chip8.registers.pc = nnn;
     } 
+
+    fn se_vx_byte(&mut self, x: u8, kk: u8) {
+        if self.chip8.registers.v[x as usize] == kk {
+            self.skip_next_inst();
+        } else {
+            self.next_inst();
+        }
+    }
+
+    fn sne_vx_byte(&mut self, x: u8, kk: u8) {
+        if self.chip8.registers.v[x as usize] != kk {
+            self.next_inst();
+        } else {
+            self.skip_next_inst();
+        }
+    }
+
+    fn se_vx_vy(&mut self, x: u8, y: u8) {
+        if self.chip8.registers.v[x as usize] == self.chip8.registers.v[y as usize] {
+            self.skip_next_inst();
+        } else {
+            self.next_inst();
+        }
+    }
+
+    fn ld_vx_byte(&mut self, x: u8, kk: u8) {
+        self.chip8.registers.v[x as usize] = kk;
+        self.next_inst();
+    }
 }
