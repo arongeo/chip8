@@ -73,6 +73,8 @@ impl Cpu {
             [0x4, _, _, _]          => self.sne_vx_byte(instruction.x, instruction.kk),
             [0x5, _, _, 0x0]        => self.se_vx_vy(instruction.x, instruction.y),
             [0x6, _, _, _]          => self.ld_vx_byte(instruction.x, instruction.kk),
+            [0x7, _, _, _]          => self.add_vx_byte(instruction.x, instruction.kk),
+            [0x8, _, _, 0x0]        => self.ld_vx_byte(instruction.x, instruction.y),    
             _ => self.next_inst(),
         }
     }
@@ -128,5 +130,19 @@ impl Cpu {
     fn ld_vx_byte(&mut self, x: u8, kk: u8) {
         self.chip8.registers.v[x as usize] = kk;
         self.next_inst();
+    }
+
+    fn add_vx_byte(&mut self, x: u8, kk: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] + kk;
+        self.next_inst();
+    }
+
+    fn ld_vx_vy(&mut self, x: u8, y: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize];
+        self.next_inst();
+    }
+
+    fn or_vx_vy(&mut self, x: u8, y: u8) {
+        self.chip8.registers.v[x as usize]
     }
 }
