@@ -159,4 +159,37 @@ impl Cpu {
         self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] ^ self.chip8.registers.v[y as usize];
         self.next_inst();
     }
+
+    fn add_vx_vy(&mut self, x: u8, y: u8) {
+        let mut sum_wo_filter = (self.chip8.registers.v[x as usize] + self.chip8.registers.v[y as usize]) as u16;
+        if (sum_wo_filter > 255) {
+            self.chip8.registers.v[x as usize] = (0b0000000011111111 & sum_wo_filter) as u8;
+            self.chip8.registers.v[0xF] = 1;
+        }
+        else {
+            self.chip8.registers.v[x as usize] = sum_wo_filter as u8;
+        }
+        self.next();
+    }
+
+    fn sub_vx_vy(&mut self, x: u8, y: u8) {
+        if self.chip8.registers.v[x as usize] > self.chip8.registers.v[y as usize] {
+            self.chip8.registers.v[0xF] = 1;
+            self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] - self.chip8.registers.v[y as usize];
+        } else {
+            self.chip8.registers.v[0xF] = 0;
+            self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize]; 
+        }
+        self.next();
+    }
+
+    fn shr_vx(&mut self, x: u8) {
+        if (self.chip8.registers.v[x as usize] & 0b00000001) == 1 {
+            self.chip8.registers.v[0xF] = 1;
+        } else {
+            self.chip8.registers.v[0xF] = 0;
+        }
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] / 2;
+        self.next();
+    }
 }
