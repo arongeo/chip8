@@ -78,6 +78,7 @@ impl Cpu {
             [0x8, _, _, 0x1]        => self.or_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x2]        => self.and_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x3]        => self.xor_vx_vy(instruction.x, instruction.y),
+            [0x8, _, _, 0x4]        => self.add_vx_vy(instruction.x, instruction.y),
             _ => self.next_inst(),
         }
     }
