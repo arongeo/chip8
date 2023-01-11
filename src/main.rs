@@ -24,7 +24,7 @@ use cpu::chip8::keyboard::VKeys;
 
 fn main() {
     let mut chip8cpu = cpu::Cpu::new();
-
+    
     let sdl_context = sdl2::init().unwrap();
     let v_subsys = sdl_context.video().unwrap();
 
@@ -36,7 +36,7 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
     chip8cpu.chip8.display.set_pixel(0, 0, true);
     let mut event_pump = sdl_context.event_pump().unwrap();
-    'running: loop {
+   'running: loop {
         chip8cpu.chip8.display.render(&mut canvas);
         chip8cpu.chip8.keyboard.check_keys(&mut event_pump);
         if chip8cpu.chip8.keyboard.get_key_status(VKeys::Key1) == true {

@@ -2,6 +2,7 @@
 mod config;
 #[path = "chip8.rs"]
 pub mod chip8;
+use rand::Rng;
 
 pub struct Instruction {
     pub nibbles:    [u8; 4],
@@ -63,7 +64,7 @@ impl Cpu {
         Instruction::new(instruction)
     }
 
-    pub fn execute_instruction(&mut self, instruction: &mut Instruction) {
+    pub fn execute_instruction(&mut self, instruction: Instruction) {
         match instruction.nibbles {
             [0x0, 0x0, 0xE, 0x0]    => self.cls(),
             [0x0, 0x0, 0xE, 0xE]    => self.ret(),
@@ -85,6 +86,8 @@ impl Cpu {
             [0x8, _, _, 0xE]        => self.shl_vx(instruction.x),
             [0x9, _, _, 0x0]        => self.sne_vx_vy(instruction.x, instruction.y),
             [0xA, _, _, _]          => self.ld_i_addr(instruction.nnn),
+            [0xB, _, _, _]          => self.jp_v0_nnn(instruction.nnn),
+            [0xC, _, _, _]          => self.rnd_vx_byte(instruction.x, instruction.kk),
             _ => self.next_inst(),
         }
     }
@@ -230,6 +233,17 @@ impl Cpu {
 
     fn ld_i_addr(&mut self, nnn: u16) {
         self.chip8.registers.i = nnn;
+        self.next_inst();
+    }
+
+    fn jp_v0_nnn(&mut self, nnn: u16) {
+        self.chip8.registers.pc = nnn + self.chip8.registers.v[0x0] as u16;
+    }
+
+    fn rnd_vx_byte(&mut self, x: u8, byte: u8) {
+        let mut rng = rand::thread_rng();
+        let rand_num: u8 = rng.gen_range(0..255);
+        self.chip8.registers.v[x as usize] = byte & rand_num;
         self.next_inst();
     }
 }
