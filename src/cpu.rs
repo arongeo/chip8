@@ -79,6 +79,12 @@ impl Cpu {
             [0x8, _, _, 0x2]        => self.and_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x3]        => self.xor_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x4]        => self.add_vx_vy(instruction.x, instruction.y),
+            [0x8, _, _, 0x5]        => self.sub_vx_vy(instruction.x, instruction.y),
+            [0x8, _, _, 0x6]        => self.shr_vx(instruction.x),
+            [0x8, _, _, 0x7]        => self.subn_vx_vy(instruction.x, instruction.y),
+            [0x8, _, _, 0xE]        => self.shl_vx(instruction.x),
+            [0x9, _, _, 0x0]        => self.sne_vx_vy(instruction.x, instruction.y),
+            [0xA, _, _, _]          => self.ld_i_addr(instruction.nnn),
             _ => self.next_inst(),
         }
     }
@@ -170,7 +176,7 @@ impl Cpu {
         else {
             self.chip8.registers.v[x as usize] = sum_wo_filter as u8;
         }
-        self.next();
+        self.next_inst();
     }
 
     fn sub_vx_vy(&mut self, x: u8, y: u8) {
@@ -181,7 +187,7 @@ impl Cpu {
             self.chip8.registers.v[0xF] = 0;
             self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize]; 
         }
-        self.next();
+        self.next_inst();
     }
 
     fn shr_vx(&mut self, x: u8) {
@@ -191,6 +197,39 @@ impl Cpu {
             self.chip8.registers.v[0xF] = 0;
         }
         self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] / 2;
-        self.next();
+        self.next_inst();
+    }
+
+    fn subn_vx_vy(&mut self, x: u8, y: u8) {
+        if (self.chip8.registers.v[y as usize] > self.chip8.registers.v[x as usize]) {
+            self.chip8.registers.v[0xF] = 1;
+        } else {
+            self.chip8.registers.v[0xF] = 0;
+        }
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize];
+        self.next_inst();
+    }
+
+    fn shl_vx(&mut self, x: u8) {
+        if (self.chip8.registers.v[x as usize] & 0b10000000) > 0 {
+            self.chip8.registers.v[0xF] = 1; 
+        } else {
+            self.chip8.registers.v[0xF] = 0;
+        }
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] * 2;
+        self.next_inst();
+    }
+    
+    fn sne_vx_vy(&mut self, x: u8, y: u8) {
+        if self.chip8.registers.v[x as usize] != self.chip8.registers.v[y as usize] {
+           self.skip_next_inst();
+        } else {
+            self.next_inst();
+        }
+    }
+
+    fn ld_i_addr(&mut self, nnn: u16) {
+        self.chip8.registers.i = nnn;
+        self.next_inst();
     }
 }

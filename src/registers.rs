@@ -15,6 +15,7 @@ pub struct Registers {
     pub st: u8,
     pub pc: u16,
     pub sp: usize,
+    pub i:  u16,
 }
 
 impl Registers {
@@ -25,6 +26,7 @@ impl Registers {
             st: 0,
             pc: 0x200,
             sp: 0,
+            i:  0,
         }
     }
 }
