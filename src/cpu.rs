@@ -246,4 +246,10 @@ impl Cpu {
         self.chip8.registers.v[x as usize] = byte & rand_num;
         self.next_inst();
     }
+
+    fn drw_vx_vy_n(&mut self, x: u8, y: u8, n: u8) {
+        for mem_addr_count in 0..n {
+            self.chip8.display.draw_sprite(self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count) as usize])
+        }
+    }
 }

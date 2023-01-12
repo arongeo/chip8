@@ -62,4 +62,8 @@ impl Display {
     pub fn clear(&mut self) {
         self.pixels = [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH];
     }
+
+    pub fn draw_sprite(&mut self, sprite: u8) {
+        
+    }
 }
