@@ -88,6 +88,7 @@ impl Cpu {
             [0xA, _, _, _]          => self.ld_i_addr(instruction.nnn),
             [0xB, _, _, _]          => self.jp_v0_nnn(instruction.nnn),
             [0xC, _, _, _]          => self.rnd_vx_byte(instruction.x, instruction.kk),
+            [0xD, _, _, _]          => self.drw_vx_vy_n(instruction.x, instruction.y, instruction.n),
             _ => self.next_inst(),
         }
     }
@@ -156,17 +157,17 @@ impl Cpu {
     }
 
     fn or_vx_vy(&mut self, x: u8, y: u8) {
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] | self.chip8.registers.v[y as usize];
+        self.chip8.registers.v[x as usize] |= self.chip8.registers.v[y as usize];
         self.next_inst();
     }
 
     fn and_vx_vy(&mut self, x: u8, y: u8) {
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] & self.chip8.registers.v[y as usize];
+        self.chip8.registers.v[x as usize] &= self.chip8.registers.v[y as usize];
         self.next_inst();
     }
 
     fn xor_vx_vy(&mut self, x: u8, y: u8) {
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] ^ self.chip8.registers.v[y as usize];
+        self.chip8.registers.v[x as usize] ^= self.chip8.registers.v[y as usize];
         self.next_inst();
     }
 
@@ -247,9 +248,14 @@ impl Cpu {
         self.next_inst();
     }
 
+    /// Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
     fn drw_vx_vy_n(&mut self, x: u8, y: u8, n: u8) {
+        self.chip8.registers.v[0xF] = 0;
         for mem_addr_count in 0..n {
-            self.chip8.display.draw_sprite(self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count) as usize])
+            if self.chip8.display.draw_byte(x as usize, (y + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
+                self.chip8.registers.v[0xF] = 1;
+            }
         }
+        self.next_inst();
     }
 }

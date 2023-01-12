@@ -58,12 +58,24 @@ impl Display {
             }
         }
     }
-
+    
+    /// Clear screen
     pub fn clear(&mut self) {
         self.pixels = [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH];
     }
 
-    pub fn draw_sprite(&mut self, sprite: u8) {
-        
+    /// XOR a byte onto the screen from coordinates x and y
+    /// Return true if pixel collision happened.
+    pub fn draw_byte(&mut self, x: usize, y: usize, byte: u8) -> bool {
+        let bits = config::get_bit_values(byte);
+        let mut collision_happened = false;
+        for pixel in 0..8 {
+            let curr_val = self.get_pixel((x + pixel) & 63, y & 31);
+            self.set_pixel((x + pixel) & 63, y & 31, curr_val ^ bits[pixel]);
+            if (curr_val == bits[pixel]) && (bits[pixel] == true) {
+                collision_happened = true;
+            }
+        }
+        return collision_happened;
     }
 }
