@@ -12,16 +12,18 @@ mod config;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
-use sdl2::video::Window;
+pub use sdl2::video::Window;
 
 pub struct Display {
     pub pixels: [[bool; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
+    canvas: Canvas<Window>,
 }
 
 impl Display {
-    pub fn new() -> Self {
+    pub fn new(canvas_in: Canvas<Window>) -> Self {
         Self {
             pixels: [[false; config::CHIP8_DISPLAY_HEIGHT]; config::CHIP8_DISPLAY_WIDTH],
+            canvas: canvas_in,
         }
     }
 
@@ -44,19 +46,20 @@ impl Display {
         self.pixels[x][y]
     }
     
-    pub fn render(&mut self, canvas: &mut Canvas<Window>) {
+    pub fn render(&mut self) {
         for i in 0..config::CHIP8_DISPLAY_WIDTH {
             for j in 0..config::CHIP8_DISPLAY_HEIGHT {
                 if self.get_pixel(i, j) == true {                   
-                    canvas.set_draw_color(Color::RGB(255, 255, 255));
-                    canvas.fill_rect(Rect::new((i*10) as i32, (j*10) as i32, 10, 10));
+                    self.canvas.set_draw_color(Color::RGB(255, 255, 255));
+                    self.canvas.fill_rect(Rect::new((i*10) as i32, (j*10) as i32, 10, 10));
                 }
                 if self.get_pixel(i, j) == false {                   
-                    canvas.set_draw_color(Color::RGB(0, 0, 0));
-                    canvas.fill_rect(Rect::new((i*10) as i32, (j*10) as i32, 10, 10));
+                    self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+                    self.canvas.fill_rect(Rect::new((i*10) as i32, (j*10) as i32, 10, 10));
                 }
             }
         }
+        self.canvas.present();
     }
     
     /// Clear screen

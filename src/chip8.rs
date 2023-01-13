@@ -6,6 +6,9 @@
 // chip8.rs file
 //
 
+use sdl2::{EventPump, render::Canvas};
+use crate::cpu::chip8::display::Window;
+
 #[path = "config.rs"]
 pub mod config;
 #[path = "memory.rs"]
@@ -31,13 +34,13 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Self {
+    pub fn new(event_pump: EventPump, canvas: Canvas<Window>) -> Self {
         Self {
             memory: memory::Memory::new(),
             stack: stack::Stack::new(),
             registers: registers::Registers::new(),
-            keyboard: keyboard::Keyboard::new(),
-            display: display::Display::new(),
+            keyboard: keyboard::Keyboard::new(event_pump),
+            display: display::Display::new(canvas),
             romcartridge: romhandler::RomCartridge::new(),
         }
     }

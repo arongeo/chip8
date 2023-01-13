@@ -34,12 +34,14 @@ pub enum VKeys {
 
 pub struct Keyboard {
     keys: [bool; config::CHIP8_KEYBOARD_SIZE],
+    event_pump: EventPump,
 }
 
 impl Keyboard {
-    pub fn new() -> Self {
+    pub fn new(event_pump_in: EventPump) -> Self {
         Self {
             keys: [false; config::CHIP8_KEYBOARD_SIZE],
+            event_pump: event_pump_in,
         }
     }
 
@@ -47,8 +49,23 @@ impl Keyboard {
         self.keys[key as usize]
     }
 
-    pub fn check_keys(&mut self, event_pump: &mut EventPump) {
-        let pressed_keys: Vec<Keycode> = event_pump
+    pub fn poll_quit(&mut self) -> bool {
+        for event in self.event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} |
+                Event::KeyDown {keycode: Some(Keycode::Escape), ..} => {
+                    return false;
+                },
+                _ => {
+                    return true;
+                }
+            }
+        }
+        return true;
+    }
+
+    pub fn check_keys(&mut self) {
+        let pressed_keys: Vec<Keycode> = self.event_pump
             .keyboard_state()
             .pressed_scancodes()
             .filter_map(Keycode::from_scancode)

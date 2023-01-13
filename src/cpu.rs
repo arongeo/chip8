@@ -2,7 +2,11 @@
 mod config;
 #[path = "chip8.rs"]
 pub mod chip8;
+
 use rand::Rng;
+use sdl2::{EventPump, render::Canvas};
+use crate::chip8::display::Window;
+use std::time::Duration;
 
 pub struct Instruction {
     pub nibbles:    [u8; 4],
@@ -41,9 +45,22 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
+    pub fn new(event_pump: EventPump, canvas: Canvas<Window>) -> Self {
         Self {
-            chip8: chip8::Chip8::new(),
+            chip8: chip8::Chip8::new(event_pump, canvas),
+        }
+    }
+
+    pub fn start_execution(&mut self) {
+        let mut next_instruction = self.get_instruction();
+        while (self.chip8.registers.pc >= 0x200) && (self.chip8.keyboard.poll_quit() != false) {
+            if self.chip8.registers.pc >= 0x1000 {
+                continue;
+            }
+            self.execute_instruction(next_instruction);
+            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            next_instruction = self.get_instruction();
+            self.chip8.display.render();
         }
     }
 
