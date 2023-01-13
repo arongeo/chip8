@@ -28,7 +28,7 @@ impl Instruction {
         let new_n       =   new_nibbles[3];                             // Example: Dxyn
         let new_x       =   new_nibbles[1];                             // Example: Fx07
         let new_y       =   new_nibbles[2];                             // Example: 5xy0
-        let new_kk      =   ((new_nibbles[2] << 4) & new_nibbles[3]);   // Example: 7xkk
+        let new_kk      =   (new_nnn & 0b0000000011111111) as u8;      // Example: 7xkk
         Self {
             nibbles:    new_nibbles,
             nnn:        new_nnn,
@@ -45,17 +45,21 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(event_pump: EventPump, canvas: Canvas<Window>) -> Self {
+    pub fn new(event_pump: EventPump, canvas: Canvas<Window>, romfile: String) -> Self {
         Self {
-            chip8: chip8::Chip8::new(event_pump, canvas),
+            chip8: chip8::Chip8::new(event_pump, canvas, romfile),
         }
     }
 
     pub fn start_execution(&mut self) {
         let mut next_instruction = self.get_instruction();
         while (self.chip8.registers.pc >= 0x200) && (self.chip8.keyboard.poll_quit() != false) {
-            if self.chip8.registers.pc >= 0x1000 {
-                continue;
+            if self.chip8.registers.pc > 0xFFD {
+                println!("ERROR: The code you're running tried to write out of memory bounds!");
+                while (self.chip8.keyboard.poll_quit() != false) {
+                    self.chip8.display.render();
+                }
+                break;
             }
             self.execute_instruction(next_instruction);
             ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
@@ -269,7 +273,7 @@ impl Cpu {
     fn drw_vx_vy_n(&mut self, x: u8, y: u8, n: u8) {
         self.chip8.registers.v[0xF] = 0;
         for mem_addr_count in 0..n {
-            if self.chip8.display.draw_byte(x as usize, (y + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
+            if self.chip8.display.draw_byte((self.chip8.registers.v[x as usize]) as usize, (self.chip8.registers.v[y as usize] + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
                 self.chip8.registers.v[0xF] = 1;
             }
         }

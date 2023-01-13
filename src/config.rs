@@ -28,3 +28,22 @@ pub fn get_bit_values(n: u8) -> [bool; 8] {
     }
     return bit_stats;
 }
+
+fn printhelp() {
+    println!("Chip-8 Interpreter written in Rust");
+    println!("\nMade by arongeo");
+    println!("https://arongeo.com");
+    println!("\nUsage: ");
+    println!("chip8 <path/to/rom>");
+
+}
+
+pub fn read_rom_filename() -> String {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() == 2 {
+        args[1].clone()
+    } else {
+        printhelp();
+        std::process::exit(0);
+    }
+}

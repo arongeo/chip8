@@ -45,7 +45,13 @@ impl Display {
         Self::check_pixel_in_bounds(x, y);
         self.pixels[x][y]
     }
-    
+
+    pub fn update_window_title(&mut self, romname: String) {
+        let mut window = self.canvas.window_mut();
+        let title = format!("Chip-8 - {}", romname);
+        window.set_title(title.as_str());
+    }
+
     pub fn render(&mut self) {
         for i in 0..config::CHIP8_DISPLAY_WIDTH {
             for j in 0..config::CHIP8_DISPLAY_HEIGHT {

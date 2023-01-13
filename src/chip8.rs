@@ -34,14 +34,14 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new(event_pump: EventPump, canvas: Canvas<Window>) -> Self {
+    pub fn new(event_pump: EventPump, canvas: Canvas<Window>, romfile: String) -> Self {
         Self {
             memory: memory::Memory::new(),
             stack: stack::Stack::new(),
             registers: registers::Registers::new(),
             keyboard: keyboard::Keyboard::new(event_pump),
             display: display::Display::new(canvas),
-            romcartridge: romhandler::RomCartridge::new(),
+            romcartridge: romhandler::RomCartridge::new(romfile),
         }
     }
 
