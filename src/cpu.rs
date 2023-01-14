@@ -5,7 +5,7 @@ pub mod chip8;
 
 use rand::Rng;
 use sdl2::{EventPump, render::Canvas};
-use crate::chip8::display::Window;
+use crate::chip8::{display::Window, keyboard::VKeys};
 use std::time::Duration;
 
 pub struct Instruction {
@@ -52,8 +52,11 @@ impl Cpu {
     }
 
     pub fn start_execution(&mut self) {
+        let mut all_time = 0;
+        let mut time_count = 0;
         let mut next_instruction = self.get_instruction();
         while (self.chip8.registers.pc >= 0x200) && (self.chip8.keyboard.poll_quit() != false) {
+            let mut now = std::time::Instant::now();
             if self.chip8.registers.pc > 0xFFD {
                 println!("ERROR: The code you're running tried to write out of memory bounds!");
                 while (self.chip8.keyboard.poll_quit() != false) {
@@ -62,10 +65,16 @@ impl Cpu {
                 break;
             }
             self.execute_instruction(next_instruction);
-            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            std::thread::sleep(Duration::from_millis(15));
             next_instruction = self.get_instruction();
             self.chip8.display.render();
+            let elapsed = now.elapsed();
+            all_time = all_time + elapsed.as_micros();
+            time_count += 1;
+            println!("Elapsed: {:.4?}", elapsed);
         }
+        println!("Elapsed on average: {:.4?}", all_time/time_count);
+        println!("Frequency: {:.4?}", time_count/all_time);
     }
 
     pub fn next_inst(&mut self) {
@@ -110,6 +119,8 @@ impl Cpu {
             [0xB, _, _, _]          => self.jp_v0_nnn(instruction.nnn),
             [0xC, _, _, _]          => self.rnd_vx_byte(instruction.x, instruction.kk),
             [0xD, _, _, _]          => self.drw_vx_vy_n(instruction.x, instruction.y, instruction.n),
+            [0xE, _, 0x9, 0xE]      => self.skp_vx(instruction.x),
+            [0xE, _, 0xA, 0x1]      => self.sknp_vx(instruction.x),
             _ => self.next_inst(),
         }
     }
@@ -129,7 +140,6 @@ impl Cpu {
 
     fn jump(&mut self, nnn: u16) {
         self.chip8.registers.pc = nnn;
-        self.next_inst();
     }
 
     fn call(&mut self, nnn: u16) {
@@ -278,5 +288,25 @@ impl Cpu {
             }
         }
         self.next_inst();
+    }
+
+    fn skp_vx(&mut self, x: u8) {
+        self.chip8.keyboard.check_keys();
+        let key_status = self.chip8.keyboard.get_key_status_from_num(x);
+        if key_status == true {
+            self.skip_next_inst();
+        } else {
+            self.next_inst();
+        }
+    }
+
+    fn sknp_vx(&mut self, x: u8) {
+        self.chip8.keyboard.check_keys();
+        let key_status = self.chip8.keyboard.get_key_status_from_num(x);
+        if key_status == false {
+            self.skip_next_inst();
+        } else {
+            self.next_inst();
+        }
     }
 }

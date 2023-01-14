@@ -45,8 +45,30 @@ impl Keyboard {
         }
     }
 
-    pub fn get_key_status(&mut self, key: VKeys) -> bool {
+    pub fn get_key_status_from_vkey(&mut self, key: VKeys) -> bool {
         self.keys[key as usize]
+    }
+
+    pub fn get_key_status_from_num(&mut self, n: u8) -> bool {
+        match n {
+            0x1 => return self.get_key_status_from_vkey(VKeys::Key1),
+            0x2 => return self.get_key_status_from_vkey(VKeys::Key2),
+            0x3 => return self.get_key_status_from_vkey(VKeys::Key3),
+            0xC => return self.get_key_status_from_vkey(VKeys::KeyC),
+            0x4 => return self.get_key_status_from_vkey(VKeys::Key4),
+            0x5 => return self.get_key_status_from_vkey(VKeys::Key5),
+            0x6 => return self.get_key_status_from_vkey(VKeys::Key6),
+            0xD => return self.get_key_status_from_vkey(VKeys::KeyD),
+            0x7 => return self.get_key_status_from_vkey(VKeys::Key7),
+            0x8 => return self.get_key_status_from_vkey(VKeys::Key8),
+            0x9 => return self.get_key_status_from_vkey(VKeys::Key9),
+            0xE => return self.get_key_status_from_vkey(VKeys::KeyE),
+            0xA => return self.get_key_status_from_vkey(VKeys::KeyA),
+            0x0 => return self.get_key_status_from_vkey(VKeys::Key0),
+            0xB => return self.get_key_status_from_vkey(VKeys::KeyB),
+            0xF => return self.get_key_status_from_vkey(VKeys::KeyF),
+            _   => panic!("ERROR: Couldn't parse KEYID"),
+        };
     }
 
     pub fn poll_quit(&mut self) -> bool {
