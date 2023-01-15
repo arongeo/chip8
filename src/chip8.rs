@@ -16,6 +16,8 @@ pub mod stack;
 pub mod registers;
 #[path = "io.rs"]
 pub mod io;
+#[path = "speakers.rs"]
+pub mod speakers;
 #[path = "romhandler.rs"]
 pub mod romhandler;
 
@@ -24,6 +26,7 @@ pub struct Chip8 {
     pub stack:          stack::Stack,
     pub registers:      registers::Registers,
     pub io:             io::IO,
+    pub speaker:        speakers::Speaker,
     pub romcartridge:   romhandler::RomCartridge,
 }
 
@@ -34,6 +37,7 @@ impl Chip8 {
             stack:          stack::Stack::new(),
             registers:      registers::Registers::new(),
             io:             io::IO::new(window),
+            speaker:        speakers::Speaker::new(),
             romcartridge:   romhandler::RomCartridge::new(romfile),
         }
     }

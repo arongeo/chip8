@@ -14,6 +14,8 @@ mod chip8;
 mod cpu;
 
 extern crate minifb;
+extern crate rodio;
+
 use std::time::Duration;
 
 use minifb::Window;

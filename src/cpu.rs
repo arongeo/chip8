@@ -60,13 +60,25 @@ impl Cpu {
 
     pub fn start_execution(&mut self) {
         let mut next_instruction = self.get_instruction();
+        let mut hz_devider_counter = 0;
         self.chip8.io.render();
-        std::thread::sleep(Duration::from_millis(20));
         while (self.chip8.registers.pc >= 0x200) && (self.chip8.io.poll_quit() != false) {
             if self.chip8.registers.pc > 0xFFD {
                 println!("ERROR: The code you're running tried to write out of memory bounds!");
                 while (self.chip8.io.poll_quit() != false) {}
                 break;
+            }
+            if hz_devider_counter == 8 {
+                if self.chip8.registers.st > 0 {
+                    self.chip8.registers.st -= 1;
+                    self.chip8.speaker.check_st(self.chip8.registers.st);
+                }
+                hz_devider_counter = 0;
+            }
+            hz_devider_counter += 1;
+            self.chip8.io.check_keys();
+            if self.chip8.io.get_key_status_from_vkey(chip8::io::VKeys::Key1) {
+                self.chip8.io.set_pixel(0, 7, true);
             }
             self.execute_instruction(next_instruction);
             next_instruction = self.get_instruction();

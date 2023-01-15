@@ -9,4 +9,5 @@ authors = ["arongeo"]
 [dependencies]
 minifb = "0.23.0"
 rand = "0.8.5"
+rodio = "0.16.0"
 
