@@ -14,31 +14,27 @@ pub mod memory;
 pub mod stack;
 #[path = "registers.rs"]
 pub mod registers;
-#[path = "keyboard.rs"]
-pub mod keyboard;
-#[path = "display.rs"]
-pub mod display;
+#[path = "io.rs"]
+pub mod io;
 #[path = "romhandler.rs"]
 pub mod romhandler;
 
 pub struct Chip8 {
-    pub memory: memory::Memory,
-    pub stack: stack::Stack,
-    pub registers: registers::Registers,
-    pub keyboard: keyboard::Keyboard,
-    pub display: display::Display,
-    pub romcartridge: romhandler::RomCartridge,
+    pub memory:         memory::Memory,
+    pub stack:          stack::Stack,
+    pub registers:      registers::Registers,
+    pub io:             io::IO,
+    pub romcartridge:   romhandler::RomCartridge,
 }
 
 impl Chip8 {
-    pub fn new() -> Self {
+    pub fn new(window: crate::minifb::Window, romfile: String) -> Self {
         Self {
-            memory: memory::Memory::new(),
-            stack: stack::Stack::new(),
-            registers: registers::Registers::new(),
-            keyboard: keyboard::Keyboard::new(),
-            display: display::Display::new(),
-            romcartridge: romhandler::RomCartridge::new(),
+            memory:         memory::Memory::new(),
+            stack:          stack::Stack::new(),
+            registers:      registers::Registers::new(),
+            io:             io::IO::new(window),
+            romcartridge:   romhandler::RomCartridge::new(romfile),
         }
     }
 
@@ -52,4 +48,5 @@ impl Chip8 {
         self.registers.sp = self.registers.sp - 1;
         result
     }
+
 }
