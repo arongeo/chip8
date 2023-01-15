@@ -7,5 +7,6 @@ authors = ["arongeo"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl2 = "0.35.2"
+minifb = "0.23.0"
 rand = "0.8.5"
+

@@ -13,21 +13,26 @@ mod chip8;
 #[path = "cpu.rs"]
 mod cpu;
 
-extern crate sdl2;
+extern crate minifb;
+use std::time::Duration;
+
+use minifb::Window;
+use minifb::WindowOptions;
 
 fn main() {
     let filename = config::read_rom_filename();
-    let sdl_context = sdl2::init().unwrap();
-    let v_subsys = sdl_context.video().unwrap();
 
-    let mut window = v_subsys.window(format!("Chip-8 - {}", filename).as_str(), (config::CHIP8_DISPLAY_WIDTH * 10) as u32, (config::CHIP8_DISPLAY_HEIGHT * 10) as u32)
-        .position_centered()
-        .build()
-        .unwrap();
+    let mut window = match Window::new(format!("Chip-8 - {}", filename).as_str(), 64, 32, WindowOptions {
+        scale: minifb::Scale::X8,
+        ..WindowOptions::default()
+    }) {
+        Ok(win)     => win,
+        Err(error)  => panic!("Couldn't create window instance!"),
+    };
 
-    let mut canvas = window.into_canvas().build().unwrap();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut chip8cpu = cpu::Cpu::new(event_pump, canvas, filename);
+    window.limit_update_rate(Some(Duration::from_micros(2083)));
+
+    let mut chip8cpu = cpu::Cpu::new(window, filename);
     chip8cpu.load_instructions();
     chip8cpu.start_execution();
 }

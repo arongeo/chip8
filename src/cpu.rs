@@ -4,8 +4,7 @@ mod config;
 pub mod chip8;
 
 use rand::Rng;
-use sdl2::{EventPump, render::Canvas};
-use crate::chip8::{display::Window, keyboard::VKeys};
+use crate::chip8::io::VKeys;
 use std::time::Duration;
 
 pub struct Instruction {
@@ -45,36 +44,25 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(event_pump: EventPump, canvas: Canvas<Window>, romfile: String) -> Self {
+    pub fn new(window: crate::minifb::Window, romfile: String) -> Self {
         Self {
-            chip8: chip8::Chip8::new(event_pump, canvas, romfile),
+            chip8: chip8::Chip8::new(window, romfile),
         }
     }
 
     pub fn start_execution(&mut self) {
-        let mut all_time = 0;
-        let mut time_count = 0;
         let mut next_instruction = self.get_instruction();
-        while (self.chip8.registers.pc >= 0x200) && (self.chip8.keyboard.poll_quit() != false) {
-            let mut now = std::time::Instant::now();
+        self.chip8.io.render();
+        std::thread::sleep(Duration::from_millis(20));
+        while (self.chip8.registers.pc >= 0x200) && (self.chip8.io.poll_quit() != false) {
             if self.chip8.registers.pc > 0xFFD {
                 println!("ERROR: The code you're running tried to write out of memory bounds!");
-                while (self.chip8.keyboard.poll_quit() != false) {
-                    self.chip8.display.render();
-                }
+                while (self.chip8.io.poll_quit() != false) {}
                 break;
             }
             self.execute_instruction(next_instruction);
-            std::thread::sleep(Duration::from_millis(15));
             next_instruction = self.get_instruction();
-            self.chip8.display.render();
-            let elapsed = now.elapsed();
-            all_time = all_time + elapsed.as_micros();
-            time_count += 1;
-            println!("Elapsed: {:.4?}", elapsed);
         }
-        println!("Elapsed on average: {:.4?}", all_time/time_count);
-        println!("Frequency: {:.4?}", time_count/all_time);
     }
 
     pub fn next_inst(&mut self) {
@@ -129,7 +117,7 @@ impl Cpu {
     // Start of instruction set implementation
 
     fn cls(&mut self) {
-        self.chip8.display.clear();
+        self.chip8.io.clear();
         self.next_inst();
     }
 
@@ -283,7 +271,7 @@ impl Cpu {
     fn drw_vx_vy_n(&mut self, x: u8, y: u8, n: u8) {
         self.chip8.registers.v[0xF] = 0;
         for mem_addr_count in 0..n {
-            if self.chip8.display.draw_byte((self.chip8.registers.v[x as usize]) as usize, (self.chip8.registers.v[y as usize] + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
+            if self.chip8.io.draw_byte((self.chip8.registers.v[x as usize]) as usize, (self.chip8.registers.v[y as usize] + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
                 self.chip8.registers.v[0xF] = 1;
             }
         }
@@ -291,8 +279,8 @@ impl Cpu {
     }
 
     fn skp_vx(&mut self, x: u8) {
-        self.chip8.keyboard.check_keys();
-        let key_status = self.chip8.keyboard.get_key_status_from_num(x);
+        self.chip8.io.check_keys();
+        let key_status = self.chip8.io.get_key_status_from_num(x);
         if key_status == true {
             self.skip_next_inst();
         } else {
@@ -301,8 +289,8 @@ impl Cpu {
     }
 
     fn sknp_vx(&mut self, x: u8) {
-        self.chip8.keyboard.check_keys();
-        let key_status = self.chip8.keyboard.get_key_status_from_num(x);
+        self.chip8.io.check_keys();
+        let key_status = self.chip8.io.get_key_status_from_num(x);
         if key_status == false {
             self.skip_next_inst();
         } else {

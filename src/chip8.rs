@@ -6,9 +6,6 @@
 // chip8.rs file
 //
 
-use sdl2::{EventPump, render::Canvas};
-use crate::cpu::chip8::display::Window;
-
 #[path = "config.rs"]
 pub mod config;
 #[path = "memory.rs"]
@@ -17,31 +14,27 @@ pub mod memory;
 pub mod stack;
 #[path = "registers.rs"]
 pub mod registers;
-#[path = "keyboard.rs"]
-pub mod keyboard;
-#[path = "display.rs"]
-pub mod display;
+#[path = "io.rs"]
+pub mod io;
 #[path = "romhandler.rs"]
 pub mod romhandler;
 
 pub struct Chip8 {
-    pub memory: memory::Memory,
-    pub stack: stack::Stack,
-    pub registers: registers::Registers,
-    pub keyboard: keyboard::Keyboard,
-    pub display: display::Display,
-    pub romcartridge: romhandler::RomCartridge,
+    pub memory:         memory::Memory,
+    pub stack:          stack::Stack,
+    pub registers:      registers::Registers,
+    pub io:             io::IO,
+    pub romcartridge:   romhandler::RomCartridge,
 }
 
 impl Chip8 {
-    pub fn new(event_pump: EventPump, canvas: Canvas<Window>, romfile: String) -> Self {
+    pub fn new(window: crate::minifb::Window, romfile: String) -> Self {
         Self {
-            memory: memory::Memory::new(),
-            stack: stack::Stack::new(),
-            registers: registers::Registers::new(),
-            keyboard: keyboard::Keyboard::new(event_pump),
-            display: display::Display::new(canvas),
-            romcartridge: romhandler::RomCartridge::new(romfile),
+            memory:         memory::Memory::new(),
+            stack:          stack::Stack::new(),
+            registers:      registers::Registers::new(),
+            io:             io::IO::new(window),
+            romcartridge:   romhandler::RomCartridge::new(romfile),
         }
     }
 
