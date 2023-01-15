@@ -1,3 +1,11 @@
+// Copyright 2023 - https://github.com/arongeo
+//
+// Chip-8 Interpreter written in Rust
+// https://github.com/arongeo/chip8
+// 
+// cpu.rs file
+//
+
 #[path = "config.rs"]
 mod config;
 #[path = "chip8.rs"]
