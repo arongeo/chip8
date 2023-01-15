@@ -1,4 +1,4 @@
-// Copyright 2022 - https://github.com/arongeo
+// Copyright 2023 - https://github.com/arongeo
 //
 // Chip-8 Interpreter written in Rust
 // https://github.com/arongeo/chip8
