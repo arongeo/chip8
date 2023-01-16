@@ -26,6 +26,7 @@ fn main() {
 
     let mut window = match Window::new(format!("Chip-8 - {}", filename).as_str(), 64, 32, WindowOptions {
         scale: minifb::Scale::X8,
+        borderless: false,
         ..WindowOptions::default()
     }) {
         Ok(win)     => win,

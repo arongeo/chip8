@@ -69,6 +69,9 @@ impl Cpu {
                 break;
             }
             if hz_devider_counter == 8 {
+                if self.chip8.registers.dt > 0 {
+                    self.chip8.registers.dt -= 1;
+                }
                 if self.chip8.registers.st > 0 {
                     self.chip8.registers.st -= 1;
                     self.chip8.speaker.check_st(self.chip8.registers.st);
@@ -76,10 +79,6 @@ impl Cpu {
                 hz_devider_counter = 0;
             }
             hz_devider_counter += 1;
-            self.chip8.io.check_keys();
-            if self.chip8.io.get_key_status_from_vkey(chip8::io::VKeys::Key1) {
-                self.chip8.io.set_pixel(0, 7, true);
-            }
             self.execute_instruction(next_instruction);
             next_instruction = self.get_instruction();
         }
@@ -129,6 +128,15 @@ impl Cpu {
             [0xD, _, _, _]          => self.drw_vx_vy_n(instruction.x, instruction.y, instruction.n),
             [0xE, _, 0x9, 0xE]      => self.skp_vx(instruction.x),
             [0xE, _, 0xA, 0x1]      => self.sknp_vx(instruction.x),
+            [0xF, _, 0x0, 0x7]      => self.ld_vx_dt(instruction.x),
+            [0xF, _, 0x0, 0xA]      => self.ld_vx_k(instruction.x),
+            [0xF, _, 0x1, 0x5]      => self.ld_dt_vx(instruction.x),
+            [0xF, _, 0x1, 0x8]      => self.ld_st_vx(instruction.x),
+            [0xF, _, 0x1, 0xE]      => self.add_i_vx(instruction.x),
+            [0xF, _, 0x2, 0x9]      => self.ld_f_vx(instruction.x),
+            [0xF, _, 0x3, 0x3]      => self.ld_b_vx(instruction.x),
+            [0xF, _, 0x5, 0x5]      => self.ld_i_vx(instruction.x),
+            [0xF, _, 0x6, 0x5]      => self.ld_vx_i(instruction.x),
             _ => self.next_inst(),
         }
     }
@@ -186,7 +194,7 @@ impl Cpu {
     }
 
     fn add_vx_byte(&mut self, x: u8, kk: u8) {
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] + kk;
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_add(kk).0;
         self.next_inst();
     }
 
@@ -316,5 +324,66 @@ impl Cpu {
         } else {
             self.next_inst();
         }
+    }
+
+    fn ld_vx_dt(&mut self, x: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.registers.dt;
+    }
+
+    fn ld_vx_k(&mut self, x: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.io.wait_for_key();
+        self.next_inst();
+    }
+
+    fn ld_dt_vx(&mut self, x: u8) {
+        self.chip8.registers.dt = self.chip8.registers.v[x as usize];
+        self.next_inst();
+    }
+    
+    fn ld_st_vx(&mut self, x: u8) {
+        self.chip8.registers.st = self.chip8.registers.v[x as usize];
+        self.next_inst();
+    }
+
+    fn add_i_vx(&mut self, x: u8) {
+        self.chip8.registers.i += self.chip8.registers.v[x as usize] as u16;
+        self.next_inst();
+    }
+
+    fn ld_f_vx(&mut self, x: u8) {
+        self.chip8.registers.i = (self.chip8.registers.v[x as usize] * 5) as u16;
+        self.next_inst()
+    }
+
+    fn ld_b_vx(&mut self, x: u8) {
+        let hundreds = self.chip8.registers.v[x as usize]/100;
+        let tens = self.chip8.registers.v[x as usize]/10 - hundreds*10;
+        let ones = self.chip8.registers.v[x as usize] - (hundreds*100 + tens*10);
+
+        self.chip8.memory.ram[self.chip8.registers.i as usize] = hundreds;
+        self.chip8.memory.ram[(self.chip8.registers.i+1) as usize] = tens;
+        self.chip8.memory.ram[(self.chip8.registers.i+2) as usize] = ones;
+        
+        self.next_inst();
+    }
+
+    fn ld_i_vx(&mut self, x: u8) {
+        let mut iptr = self.chip8.registers.i as usize;
+        for i in 0..x {
+            self.chip8.memory.ram[iptr] = self.chip8.registers.v[i as usize];
+            iptr += 1;
+        }
+
+        self.next_inst();
+    }
+
+    fn ld_vx_i(&mut self, x: u8) {
+        let mut iptr = self.chip8.registers.i as usize;
+        for i in 0..x {
+            self.chip8.registers.v[i as usize] = self.chip8.memory.ram[iptr];
+            iptr += 1;
+        }
+
+        self.next_inst();
     }
 }

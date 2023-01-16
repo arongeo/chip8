@@ -10,12 +10,13 @@ use rodio::{Decoder, OutputStream, Sink};
 use rodio::source::{SineWave, Source};
 
 pub struct Speaker {
-    sink: Sink,
+    pub sink: Sink, // remove pub after done testing
+    stream: OutputStream,
 }
 
 impl Speaker {
     pub fn new() -> Self {
-        let (stream, stream_handle) = match OutputStream::try_default() {
+        let (stream_creator, stream_handle) = match OutputStream::try_default() {
             Ok((str, str_hand)) => (str, str_hand),
             Err(error) => panic!("Failed to create sound stream handle! ERROR: {}", error),
         };
@@ -28,6 +29,7 @@ impl Speaker {
         sink_creator.pause();
         Self {
             sink: sink_creator,
+            stream: stream_creator,
         }
     }
 

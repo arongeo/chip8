@@ -162,4 +162,38 @@ impl IO {
                 _ => (),
         });
     }
+
+    pub fn wait_for_key(&mut self) -> u8 {
+        self.render();
+        let mut key: Result<u8, ()> = Err(());
+        let mut keys = self.window.get_keys();
+        loop {
+            while (keys.len() == 0) {
+                self.render();
+                keys = self.window.get_keys();
+            }
+            key = match keys[0] {
+                Key::Key1   => Ok(0x1),
+                Key::Key2   => Ok(0x2),
+                Key::Key3   => Ok(0x3),
+                Key::Key4   => Ok(0xC),
+                Key::Q      => Ok(0x4),
+                Key::W      => Ok(0x5),
+                Key::E      => Ok(0x6),
+                Key::R      => Ok(0xD),
+                Key::A      => Ok(0x7),
+                Key::S      => Ok(0x8),
+                Key::D      => Ok(0x9),
+                Key::F      => Ok(0xE),
+                Key::Z      => Ok(0xA),
+                Key::X      => Ok(0x0),
+                Key::C      => Ok(0xB),
+                Key::V      => Ok(0xF),
+                _           => Err(()),
+            };
+            if key != Err(()) {
+                return key.unwrap();
+            }
+        }
+    } 
 }
