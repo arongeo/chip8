@@ -1,6 +1,11 @@
 # chip8
 chip8 interpreter in rust - by @arongeo
 
+## Building and running
+To run any ROM use:
+
+<code>cargo run <path/to/rom></code>
+
 ## References used
 - [Cowgod's Chip-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
 
