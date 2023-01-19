@@ -16,6 +16,7 @@ use crate::chip8::io::VKeys;
 use std::time::Duration;
 
 pub struct Instruction {
+    pub instruction: u16,
     pub nibbles:    [u8; 4],
     pub nnn:        u16,
     pub n:          u8,
@@ -37,12 +38,13 @@ impl Instruction {
         let new_y       =   new_nibbles[2];                             // Example: 5xy0
         let new_kk      =   (new_nnn & 0b0000000011111111) as u8;      // Example: 7xkk
         Self {
-            nibbles:    new_nibbles,
-            nnn:        new_nnn,
-            n:          new_n,
-            x:          new_x,
-            y:          new_y,
-            kk:         new_kk,
+            instruction:    instruction,
+            nibbles:        new_nibbles,
+            nnn:            new_nnn,
+            n:              new_n,
+            x:              new_x,
+            y:              new_y,
+            kk:             new_kk,
         }
     }
 }
@@ -60,14 +62,25 @@ impl Cpu {
 
     pub fn start_execution(&mut self) {
         let mut next_instruction = self.get_instruction();
+        let mut hz_devider_counter = 0;
         self.chip8.io.render();
-        std::thread::sleep(Duration::from_millis(20));
         while (self.chip8.registers.pc >= 0x200) && (self.chip8.io.poll_quit() != false) {
             if self.chip8.registers.pc > 0xFFD {
                 println!("ERROR: The code you're running tried to write out of memory bounds!");
                 while (self.chip8.io.poll_quit() != false) {}
                 break;
             }
+            if hz_devider_counter == 8 {
+                if self.chip8.registers.dt > 0 {
+                    self.chip8.registers.dt -= 1;
+                }
+                if self.chip8.registers.st > 0 {
+                    self.chip8.registers.st -= 1;
+                    self.chip8.speaker.check_st(self.chip8.registers.st);
+                }
+                hz_devider_counter = 0;
+            }
+            hz_devider_counter += 1;
             self.execute_instruction(next_instruction);
             next_instruction = self.get_instruction();
         }
@@ -101,7 +114,7 @@ impl Cpu {
             [0x5, _, _, 0x0]        => self.se_vx_vy(instruction.x, instruction.y),
             [0x6, _, _, _]          => self.ld_vx_byte(instruction.x, instruction.kk),
             [0x7, _, _, _]          => self.add_vx_byte(instruction.x, instruction.kk),
-            [0x8, _, _, 0x0]        => self.ld_vx_byte(instruction.x, instruction.y),
+            [0x8, _, _, 0x0]        => self.ld_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x1]        => self.or_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x2]        => self.and_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x3]        => self.xor_vx_vy(instruction.x, instruction.y),
@@ -117,6 +130,15 @@ impl Cpu {
             [0xD, _, _, _]          => self.drw_vx_vy_n(instruction.x, instruction.y, instruction.n),
             [0xE, _, 0x9, 0xE]      => self.skp_vx(instruction.x),
             [0xE, _, 0xA, 0x1]      => self.sknp_vx(instruction.x),
+            [0xF, _, 0x0, 0x7]      => self.ld_vx_dt(instruction.x),
+            [0xF, _, 0x0, 0xA]      => self.ld_vx_k(instruction.x),
+            [0xF, _, 0x1, 0x5]      => self.ld_dt_vx(instruction.x),
+            [0xF, _, 0x1, 0x8]      => self.ld_st_vx(instruction.x),
+            [0xF, _, 0x1, 0xE]      => self.add_i_vx(instruction.x),
+            [0xF, _, 0x2, 0x9]      => self.ld_f_vx(instruction.x),
+            [0xF, _, 0x3, 0x3]      => self.ld_b_vx(instruction.x),
+            [0xF, _, 0x5, 0x5]      => self.ld_i_vx(instruction.x),
+            [0xF, _, 0x6, 0x5]      => self.ld_vx_i(instruction.x),
             _ => self.next_inst(),
         }
     }
@@ -132,6 +154,7 @@ impl Cpu {
     fn ret(&mut self) {
         self.chip8.registers.pc = self.chip8.stack.stack[self.chip8.registers.sp];
         self.chip8.registers.sp = self.chip8.registers.sp - 1;
+        self.next_inst();
     }
 
     fn jump(&mut self, nnn: u16) {
@@ -154,9 +177,9 @@ impl Cpu {
 
     fn sne_vx_byte(&mut self, x: u8, kk: u8) {
         if self.chip8.registers.v[x as usize] != kk {
-            self.next_inst();
-        } else {
             self.skip_next_inst();
+        } else {
+            self.next_inst();
         }
     }
 
@@ -174,7 +197,7 @@ impl Cpu {
     }
 
     fn add_vx_byte(&mut self, x: u8, kk: u8) {
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] + kk;
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_add(kk).0;
         self.next_inst();
     }
 
@@ -199,7 +222,7 @@ impl Cpu {
     }
 
     fn add_vx_vy(&mut self, x: u8, y: u8) {
-        let mut sum_wo_filter = (self.chip8.registers.v[x as usize] + self.chip8.registers.v[y as usize]) as u16;
+        let mut sum_wo_filter = (self.chip8.registers.v[x as usize].overflowing_add(self.chip8.registers.v[y as usize]).0) as u16;
         if (sum_wo_filter > 255) {
             self.chip8.registers.v[x as usize] = (0b0000000011111111 & sum_wo_filter) as u8;
             self.chip8.registers.v[0xF] = 1;
@@ -237,7 +260,7 @@ impl Cpu {
         } else {
             self.chip8.registers.v[0xF] = 0;
         }
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize];
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize].overflowing_sub(self.chip8.registers.v[x as usize]).0;
         self.next_inst();
     }
 
@@ -247,7 +270,7 @@ impl Cpu {
         } else {
             self.chip8.registers.v[0xF] = 0;
         }
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] * 2;
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_mul(2).0;
         self.next_inst();
     }
     
@@ -265,7 +288,7 @@ impl Cpu {
     }
 
     fn jp_v0_nnn(&mut self, nnn: u16) {
-        self.chip8.registers.pc = nnn + self.chip8.registers.v[0x0] as u16;
+        self.chip8.registers.pc = nnn.overflowing_add(self.chip8.registers.v[0x0] as u16).0;
     }
 
     fn rnd_vx_byte(&mut self, x: u8, byte: u8) {
@@ -288,7 +311,7 @@ impl Cpu {
 
     fn skp_vx(&mut self, x: u8) {
         self.chip8.io.check_keys();
-        let key_status = self.chip8.io.get_key_status_from_num(x);
+        let key_status = self.chip8.io.get_key_status_from_num(self.chip8.registers.v[x as usize]);
         if key_status == true {
             self.skip_next_inst();
         } else {
@@ -298,11 +321,73 @@ impl Cpu {
 
     fn sknp_vx(&mut self, x: u8) {
         self.chip8.io.check_keys();
-        let key_status = self.chip8.io.get_key_status_from_num(x);
+        let key_status = self.chip8.io.get_key_status_from_num(self.chip8.registers.v[x as usize]);
         if key_status == false {
             self.skip_next_inst();
         } else {
             self.next_inst();
         }
+    }
+
+    fn ld_vx_dt(&mut self, x: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.registers.dt;
+        self.next_inst();
+    }
+
+    fn ld_vx_k(&mut self, x: u8) {
+        self.chip8.registers.v[x as usize] = self.chip8.io.wait_for_key();
+        self.next_inst();
+    }
+
+    fn ld_dt_vx(&mut self, x: u8) {
+        self.chip8.registers.dt = self.chip8.registers.v[x as usize];
+        self.next_inst();
+    }
+    
+    fn ld_st_vx(&mut self, x: u8) {
+        self.chip8.registers.st = self.chip8.registers.v[x as usize];
+        self.next_inst();
+    }
+
+    fn add_i_vx(&mut self, x: u8) {
+        self.chip8.registers.i += self.chip8.registers.v[x as usize] as u16;
+        self.next_inst();
+    }
+
+    fn ld_f_vx(&mut self, x: u8) {
+        self.chip8.registers.i = (self.chip8.registers.v[x as usize] * 5) as u16;
+        self.next_inst()
+    }
+
+    fn ld_b_vx(&mut self, x: u8) {
+        let hundreds = self.chip8.registers.v[x as usize]/100;
+        let tens = self.chip8.registers.v[x as usize]/10 - hundreds*10;
+        let ones = self.chip8.registers.v[x as usize] - (hundreds*100 + tens*10);
+
+        self.chip8.memory.ram[self.chip8.registers.i as usize] = hundreds;
+        self.chip8.memory.ram[(self.chip8.registers.i+1) as usize] = tens;
+        self.chip8.memory.ram[(self.chip8.registers.i+2) as usize] = ones;
+        
+        self.next_inst();
+    }
+
+    fn ld_i_vx(&mut self, x: u8) {
+        let mut iptr = self.chip8.registers.i as usize;
+        for i in 0..x {
+            self.chip8.memory.ram[iptr] = self.chip8.registers.v[i as usize];
+            iptr += 1;
+        }
+
+        self.next_inst();
+    }
+
+    fn ld_vx_i(&mut self, x: u8) {
+        let mut iptr = self.chip8.registers.i as usize;
+        for i in 0..(x+1) {
+            self.chip8.registers.v[i as usize] = self.chip8.memory.ram[iptr];
+            iptr += 1;
+        }
+
+        self.next_inst();
     }
 }

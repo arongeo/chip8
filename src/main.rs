@@ -14,6 +14,8 @@ mod chip8;
 mod cpu;
 
 extern crate minifb;
+extern crate rodio;
+
 use std::time::Duration;
 
 use minifb::Window;
@@ -24,6 +26,7 @@ fn main() {
 
     let mut window = match Window::new(format!("Chip-8 - {}", filename).as_str(), 64, 32, WindowOptions {
         scale: minifb::Scale::X8,
+        borderless: false,
         ..WindowOptions::default()
     }) {
         Ok(win)     => win,
