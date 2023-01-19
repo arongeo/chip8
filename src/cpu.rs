@@ -16,6 +16,7 @@ use crate::chip8::io::VKeys;
 use std::time::Duration;
 
 pub struct Instruction {
+    pub instruction: u16,
     pub nibbles:    [u8; 4],
     pub nnn:        u16,
     pub n:          u8,
@@ -37,12 +38,13 @@ impl Instruction {
         let new_y       =   new_nibbles[2];                             // Example: 5xy0
         let new_kk      =   (new_nnn & 0b0000000011111111) as u8;      // Example: 7xkk
         Self {
-            nibbles:    new_nibbles,
-            nnn:        new_nnn,
-            n:          new_n,
-            x:          new_x,
-            y:          new_y,
-            kk:         new_kk,
+            instruction:    instruction,
+            nibbles:        new_nibbles,
+            nnn:            new_nnn,
+            n:              new_n,
+            x:              new_x,
+            y:              new_y,
+            kk:             new_kk,
         }
     }
 }
@@ -79,6 +81,7 @@ impl Cpu {
                 hz_devider_counter = 0;
             }
             hz_devider_counter += 1;
+            println!("looped with {:#x}", next_instruction.instruction);
             self.execute_instruction(next_instruction);
             next_instruction = self.get_instruction();
         }
@@ -152,6 +155,7 @@ impl Cpu {
     fn ret(&mut self) {
         self.chip8.registers.pc = self.chip8.stack.stack[self.chip8.registers.sp];
         self.chip8.registers.sp = self.chip8.registers.sp - 1;
+        self.next_inst();
     }
 
     fn jump(&mut self, nnn: u16) {
@@ -328,10 +332,12 @@ impl Cpu {
 
     fn ld_vx_dt(&mut self, x: u8) {
         self.chip8.registers.v[x as usize] = self.chip8.registers.dt;
+        self.next_inst();
     }
 
     fn ld_vx_k(&mut self, x: u8) {
         self.chip8.registers.v[x as usize] = self.chip8.io.wait_for_key();
+        println!("{}", self.chip8.registers.v[x as usize]);
         self.next_inst();
     }
 

@@ -167,7 +167,7 @@ impl IO {
         self.render();
         let mut key: Result<u8, ()> = Err(());
         let mut keys = self.window.get_keys();
-        loop {
+        while key == Err(()) {
             while (keys.len() == 0) {
                 self.render();
                 keys = self.window.get_keys();
@@ -189,11 +189,12 @@ impl IO {
                 Key::X      => Ok(0x0),
                 Key::C      => Ok(0xB),
                 Key::V      => Ok(0xF),
+                Key::Escape => std::process::exit(0),
                 _           => Err(()),
             };
-            if key != Err(()) {
-                return key.unwrap();
-            }
+            self.render();
+            keys = self.window.get_keys();
         }
+        return key.unwrap();
     } 
 }
