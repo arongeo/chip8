@@ -26,6 +26,7 @@ impl Speaker {
         };
         let source = SineWave::new(700.0);
         sink_creator.append(source);
+        sink_creator.set_volume(0.5);
         sink_creator.pause();
         Self {
             sink: sink_creator,
@@ -39,6 +40,10 @@ impl Speaker {
 
     pub fn stop(&mut self) {
         self.sink.pause();
+    }
+
+    pub fn volume(&mut self, vol: f32) {
+        self.sink.set_volume(vol);
     }
 
     pub fn check_st(&mut self, st: u8) {
