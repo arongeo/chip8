@@ -81,7 +81,6 @@ impl Cpu {
                 hz_devider_counter = 0;
             }
             hz_devider_counter += 1;
-            println!("looped with {:#x}", next_instruction.instruction);
             self.execute_instruction(next_instruction);
             next_instruction = self.get_instruction();
         }
@@ -115,7 +114,7 @@ impl Cpu {
             [0x5, _, _, 0x0]        => self.se_vx_vy(instruction.x, instruction.y),
             [0x6, _, _, _]          => self.ld_vx_byte(instruction.x, instruction.kk),
             [0x7, _, _, _]          => self.add_vx_byte(instruction.x, instruction.kk),
-            [0x8, _, _, 0x0]        => self.ld_vx_byte(instruction.x, instruction.y),
+            [0x8, _, _, 0x0]        => self.ld_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x1]        => self.or_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x2]        => self.and_vx_vy(instruction.x, instruction.y),
             [0x8, _, _, 0x3]        => self.xor_vx_vy(instruction.x, instruction.y),
@@ -178,9 +177,9 @@ impl Cpu {
 
     fn sne_vx_byte(&mut self, x: u8, kk: u8) {
         if self.chip8.registers.v[x as usize] != kk {
-            self.next_inst();
-        } else {
             self.skip_next_inst();
+        } else {
+            self.next_inst();
         }
     }
 
@@ -223,7 +222,7 @@ impl Cpu {
     }
 
     fn add_vx_vy(&mut self, x: u8, y: u8) {
-        let mut sum_wo_filter = (self.chip8.registers.v[x as usize] + self.chip8.registers.v[y as usize]) as u16;
+        let mut sum_wo_filter = (self.chip8.registers.v[x as usize].overflowing_add(self.chip8.registers.v[y as usize]).0) as u16;
         if (sum_wo_filter > 255) {
             self.chip8.registers.v[x as usize] = (0b0000000011111111 & sum_wo_filter) as u8;
             self.chip8.registers.v[0xF] = 1;
@@ -261,7 +260,7 @@ impl Cpu {
         } else {
             self.chip8.registers.v[0xF] = 0;
         }
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize];
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize].overflowing_sub(self.chip8.registers.v[x as usize]).0;
         self.next_inst();
     }
 
@@ -271,7 +270,7 @@ impl Cpu {
         } else {
             self.chip8.registers.v[0xF] = 0;
         }
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] * 2;
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_mul(2).0;
         self.next_inst();
     }
     
@@ -289,7 +288,7 @@ impl Cpu {
     }
 
     fn jp_v0_nnn(&mut self, nnn: u16) {
-        self.chip8.registers.pc = nnn + self.chip8.registers.v[0x0] as u16;
+        self.chip8.registers.pc = nnn.overflowing_add(self.chip8.registers.v[0x0] as u16).0;
     }
 
     fn rnd_vx_byte(&mut self, x: u8, byte: u8) {
@@ -312,7 +311,7 @@ impl Cpu {
 
     fn skp_vx(&mut self, x: u8) {
         self.chip8.io.check_keys();
-        let key_status = self.chip8.io.get_key_status_from_num(x);
+        let key_status = self.chip8.io.get_key_status_from_num(self.chip8.registers.v[x as usize]);
         if key_status == true {
             self.skip_next_inst();
         } else {
@@ -322,7 +321,7 @@ impl Cpu {
 
     fn sknp_vx(&mut self, x: u8) {
         self.chip8.io.check_keys();
-        let key_status = self.chip8.io.get_key_status_from_num(x);
+        let key_status = self.chip8.io.get_key_status_from_num(self.chip8.registers.v[x as usize]);
         if key_status == false {
             self.skip_next_inst();
         } else {
@@ -337,7 +336,6 @@ impl Cpu {
 
     fn ld_vx_k(&mut self, x: u8) {
         self.chip8.registers.v[x as usize] = self.chip8.io.wait_for_key();
-        println!("{}", self.chip8.registers.v[x as usize]);
         self.next_inst();
     }
 
@@ -385,7 +383,7 @@ impl Cpu {
 
     fn ld_vx_i(&mut self, x: u8) {
         let mut iptr = self.chip8.registers.i as usize;
-        for i in 0..x {
+        for i in 0..(x+1) {
             self.chip8.registers.v[i as usize] = self.chip8.memory.ram[iptr];
             iptr += 1;
         }
