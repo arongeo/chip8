@@ -301,8 +301,12 @@ impl Cpu {
     /// Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
     fn drw_vx_vy_n(&mut self, x: u8, y: u8, n: u8) {
         self.chip8.registers.v[0xF] = 0;
+        let mut vy_with_mac = 0;
+        let mut i_with_mac = 0;
         for mem_addr_count in 0..n {
-            if self.chip8.io.draw_byte((self.chip8.registers.v[x as usize]) as usize, (self.chip8.registers.v[y as usize] + mem_addr_count) as usize, self.chip8.memory.ram[(self.chip8.registers.i + mem_addr_count as u16) as usize]) == true {
+            vy_with_mac = self.chip8.registers.v[y as usize].overflowing_add(mem_addr_count).0;
+            i_with_mac = self.chip8.registers.i.overflowing_add(mem_addr_count as u16).0;
+            if self.chip8.io.draw_byte((self.chip8.registers.v[x as usize]) as usize, vy_with_mac as usize, self.chip8.memory.ram[i_with_mac as usize]) == true {
                 self.chip8.registers.v[0xF] = 1;
             }
         }
