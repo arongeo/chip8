@@ -236,10 +236,10 @@ impl Cpu {
     fn sub_vx_vy(&mut self, x: u8, y: u8) {
         if self.chip8.registers.v[x as usize] > self.chip8.registers.v[y as usize] {
             self.chip8.registers.v[0xF] = 1;
-            self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] - self.chip8.registers.v[y as usize];
+            self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_sub(self.chip8.registers.v[y as usize]).0;
         } else {
             self.chip8.registers.v[0xF] = 0;
-            self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize] - self.chip8.registers.v[x as usize]; 
+            self.chip8.registers.v[x as usize] = self.chip8.registers.v[y as usize].overflowing_sub(self.chip8.registers.v[x as usize]).0; 
         }
         self.next_inst();
     }
@@ -250,7 +250,7 @@ impl Cpu {
         } else {
             self.chip8.registers.v[0xF] = 0;
         }
-        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize] / 2;
+        self.chip8.registers.v[x as usize] = self.chip8.registers.v[x as usize].overflowing_div(2).0;
         self.next_inst();
     }
 
@@ -354,12 +354,12 @@ impl Cpu {
     }
 
     fn add_i_vx(&mut self, x: u8) {
-        self.chip8.registers.i += self.chip8.registers.v[x as usize] as u16;
+        self.chip8.registers.i = self.chip8.registers.v[x as usize].overflowing_add(self.chip8.registers.v[x as usize]).0 as u16;
         self.next_inst();
     }
 
     fn ld_f_vx(&mut self, x: u8) {
-        self.chip8.registers.i = (self.chip8.registers.v[x as usize] * 5) as u16;
+        self.chip8.registers.i = (self.chip8.registers.v[x as usize].overflowing_mul(5).0) as u16;
         self.next_inst()
     }
 
