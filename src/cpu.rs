@@ -354,7 +354,7 @@ impl Cpu {
     }
 
     fn add_i_vx(&mut self, x: u8) {
-        self.chip8.registers.i = self.chip8.registers.v[x as usize].overflowing_add(self.chip8.registers.v[x as usize]).0 as u16;
+        self.chip8.registers.i += self.chip8.registers.v[x as usize] as u16;
         self.next_inst();
     }
 
